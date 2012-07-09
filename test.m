@@ -1,13 +1,22 @@
+if ispc
+    user_dir = getenv('USERPROFILE'); 
+else
+    user_dir = getenv('HOME');
+end
+
+data_dir = fullfile(user_dir, 'Dropbox', 'IntrinsicImageData');
+% data_dir = fullfile('..', 'data');
+
 image_names = {'apple';'box';'cup1';'cup2';'deer';'desktop.ini'; ...
     'dinosaur';'frog1';'frog2';'panther';'paper1';'paper2';'pear'; ...
     'phone';'potato';'raccoon';'squirrel';'sun';'teabag1';'teabag2'; ...
     'turtle'};
 idx = 1;    % Select a particular image
 
-I = imread(fullfile('..', 'data', image_names{idx}, 'original.png'));
-s = imread(fullfile('..', 'data', image_names{idx}, 'shading.png'));
-R = imread(fullfile('..', 'data', image_names{idx}, 'reflectance.png'));
-mask = imread(fullfile('..', 'data', image_names{idx}, 'mask.png'));
+I = imread(fullfile(data_dir, image_names{idx}, 'original.png'));
+s = imread(fullfile(data_dir, image_names{idx}, 'shading.png'));
+R = imread(fullfile(data_dir, image_names{idx}, 'reflectance.png'));
+mask = imread(fullfile(data_dir, image_names{idx}, 'mask.png'));
 
 % Plot the image components
 % figure(1); imshow(I); title('Original');

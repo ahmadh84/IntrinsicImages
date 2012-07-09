@@ -1,4 +1,4 @@
-function Es = computeShadingPrior(S, mask)
+function Es = computeShadingPrior(S, mask, nghb_masks)
 % Compute shading prior as in Gehler et. al., 2011, eqn. 4
 %
 % Inputs:
@@ -16,6 +16,11 @@ function Es = computeShadingPrior(S, mask)
 Es = 0;
 
 [M, N] = size(S);
+% 
+% Es = sum((S(nghb_masks(:,:,1)) - S(nghb_masks(:,:,2))).^2);
+% Es = Es + sum((S(nghb_masks(:,:,3)) - S(nghb_masks(:,:,4))).^2);
+% Es = Es + sum((S(nghb_masks(:,:,5)) - S(nghb_masks(:,:,6))).^2);
+% Es = Es + sum((S(nghb_masks(:,:,7)) - S(nghb_masks(:,:,8))).^2);
 
 % For each pixel (skip border to avoid edge conditions)
 for m = 2:M-1
