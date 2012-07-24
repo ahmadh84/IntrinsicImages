@@ -76,10 +76,10 @@ last_energy = inf;
 curr_energy = -inf;
 
 while last_energy - curr_energy > settings.diff_theta
+    last_energy = curr_energy;
+    
     % compute the total energy given the cluster assignment and reflectance
-    energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
-    
-    
+    curr_energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
 end
 end
 

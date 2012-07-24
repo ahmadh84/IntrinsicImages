@@ -1,4 +1,4 @@
-function Ecl = computeGlobalReflectancePrior(r, Rd, alpha, alpha_cntr, mask)
+function [Ecl, dEcl] = computeGlobalReflectancePrior(r, Rd, alpha, alpha_cntr, mask)
 % Computes an energy function where each pixel's current reflectance value
 % is compared to the cluster centers they belong to. The method is given in
 % eq (6) in Gehler et al. NIPS 2011
@@ -23,6 +23,11 @@ rdotRd_masked = rdotRd(mask(:),:);
 
 % difference of reflectance with the selected basis colors
 diff = rdotRd_masked - alpha_cntr(alpha(mask),:);
-Ecl = sum(diff(:).^2);
+%Ecl = sum(diff(:).^2);
+Ecl = (1/3) * sum(diff(:).^2);
+
+% compute the gradient
+Rdr = reshape(Rd, [size(mask,1)*size(mask,2) 3]);
+dEcl = (2/3) * sum(Rdr(mask(:),:) .* diff, 2);
 end
 
