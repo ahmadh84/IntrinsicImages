@@ -1,7 +1,7 @@
 function energy = computeEnergy(r, alpha, alpha_cntr, data, settings)
 
 % compute the shading prior energy
-[Es, dEs] = computeShadingPrior(data.Im, r, data.mask);
+[Es, dEs] = computeShadingPrior(data.Im, r, data.L, data.mask);
 
 % compute gradient consistency
 Eret = computeGradientConsistency(r, data.log_gradm_g, data.nghb_masks);

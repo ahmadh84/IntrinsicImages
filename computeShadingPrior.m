@@ -1,4 +1,4 @@
-function [Es, dEs] = computeShadingPrior(Im, r, mask) %, nghb_masks)
+function [Es, dEs] = computeShadingPrior(Im, r, L, mask) %, nghb_masks)
 % Compute shading prior as in Gehler et. al., 2011, eqn. 4
 %
 % Inputs:
@@ -52,6 +52,5 @@ s = Im ./ r;
 % end
 
 % Fastest method: used in code for NIPS 2011
-L = create4connected(M, N, mask);
 Es = 2 * s(mask).' * L * s(mask);
 dEs = -2 * L * s(mask) .* Im(mask) ./ r(mask).^2; % SJR Note: NIPS 2011 paper adds eps in denominator

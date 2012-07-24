@@ -12,7 +12,7 @@ function [s, R] = coordinateDescent(I, mask)
 %   R - the reflectance matrix with 3 channels, same size as I
 % 
 % Ahmad Humayun
-% July 9, 2012
+% July 11, 2012
 
 settings.theta_g = 10;          % threshold for intensity edge
 settings.theta_c = 6;           % threshold for chromaticity edge
@@ -20,7 +20,16 @@ settings.C = 100;               % number of basis color clusters
 
 settings.w_s = 1e-5;            % the weight for spatial prior term
 settings.w_r = 1e-5;            % the weight for gradient consistency term
-settings.w_cl = 1;              % the weight for global sparse reflectance prior
+settings.w_cl = 1;              % the weight for global sparse reflectance 
+                                % prior
+
+settings.diff_theta = 1e-5;     % terminate looping if the difference in 
+                                % energy between iteration is less than this 
+                                % value
+
+% add libraries to the path
+curr_dir = fileparts(which(mfilename));
+addpath(genpath(fullfile(curr_dir, 'libs')));
 
 
 % check if its a color image
@@ -46,6 +55,9 @@ data.g = computeReflectanceEdge(data, settings);
 % gradient consistency - retinex term E_{ret})
 data.log_gradm_g = computeLogGradMagEdge(data);
 
+% Create discrete Laplacian operator as a matrix
+data.L = create4connected(size(data.I,1), size(data.I,2), data.mask);
+
 % get an initial value of r -> r^0
 r = rinitialize(data, 1);
 
@@ -60,8 +72,15 @@ fprintf('Done k-means\n');
 alpha_clstr = zeros(size(r));
 alpha_clstr(data.mask) = alpha;
 
-% compute the total energy given the cluster assignment and reflectance
-energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
+last_energy = inf;
+curr_energy = -inf;
+
+while last_energy - curr_energy > settings.diff_theta
+    % compute the total energy given the cluster assignment and reflectance
+    energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
+    
+    
+end
 end
 
 
