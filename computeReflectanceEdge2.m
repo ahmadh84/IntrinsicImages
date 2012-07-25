@@ -28,20 +28,19 @@ I(I < cut) = cut;
   
 % replicate pixels at image boundaries to deal with boundary cases later on
 log_I = log(I);
-log_I = [log_I(1,:,:); log_I; log_I(end,:,:)];
-log_I = [log_I(:,1,:) log_I log_I(:,end,:)];
+log_I_rshp = reshape(log_I, [size(log_I,1)*size(log_I,2) 3]);
 
-% get the center image
-center_log_I = log_I(2:end-1, 2:end-1, :);
+temp = log_I_rshp(data.nghb_masks(:,:,2),:) - ...
+       log_I_rshp(data.nghb_masks(:,:,1),:);
+v_filtered_log_I = zeros([size(log_I,1)*size(log_I,2) 3]);
+v_filtered_log_I(data.nghb_masks(:,:,1),:) = temp;
+v_filtered_log_I = reshape(v_filtered_log_I, size(log_I));
 
-% get the 4 images for the 4-connected neighborhood pixels
-north_log_I = log_I(1:end-2, 2:end-1, :);
-% east_log_I  = log_I(2:end-1, 3:end,   :);
-% south_log_I = log_I(3:end,   2:end-1, :);
-west_log_I  = log_I(2:end-1, 1:end-2, :);
-
-v_filtered_log_I = north_log_I - center_log_I;
-h_filtered_log_I = west_log_I - center_log_I;
+temp = log_I_rshp(data.nghb_masks(:,:,8),:) - ...
+       log_I_rshp(data.nghb_masks(:,:,7),:);
+h_filtered_log_I = zeros([size(log_I,1)*size(log_I,2) 3]);
+h_filtered_log_I(data.nghb_masks(:,:,7),:) = temp;
+h_filtered_log_I = reshape(h_filtered_log_I, size(log_I));
 
 v_gray_response = repmat(mean(v_filtered_log_I, 3), [1 1 3]);
 h_gray_response = repmat(mean(h_filtered_log_I, 3), [1 1 3]);
@@ -54,20 +53,14 @@ h_norm_color_response = sqrt(sum(h_color_response.^2, 3));
 
 
 log_I_gr = log(mean(I,3));
-log_I_gr = [log_I_gr(1,:,:); log_I_gr; log_I_gr(end,:,:)];
-log_I_gr = [log_I_gr(:,1,:) log_I_gr log_I_gr(:,end,:)];
 
-% get the center image
-center_log_I_gr = log_I_gr(2:end-1, 2:end-1, :);
+temp = log_I_gr(data.nghb_masks(:,:,2)) - log_I_gr(data.nghb_masks(:,:,1));
+v_filtered_log_I_gr = zeros(size(log_I_gr));
+v_filtered_log_I_gr(data.nghb_masks(:,:,1)) = temp;
 
-% get the 4 images for the 4-connected neighborhood pixels
-north_log_I_gr = log_I_gr(1:end-2, 2:end-1, :);
-% east_log_I_gr  = log_I_gr(2:end-1, 3:end,   :);
-% south_log_I_gr = log_I_gr(3:end,   2:end-1, :);
-west_log_I_gr  = log_I_gr(2:end-1, 1:end-2, :);
-
-v_filtered_log_I_gr = north_log_I_gr - center_log_I_gr;
-h_filtered_log_I_gr = west_log_I_gr - center_log_I_gr;
+temp = log_I_gr(data.nghb_masks(:,:,8)) - log_I_gr(data.nghb_masks(:,:,7));
+h_filtered_log_I_gr = zeros(size(log_I_gr));
+h_filtered_log_I_gr(data.nghb_masks(:,:,7)) = temp;
 
 
 % compute the edges in both direction
