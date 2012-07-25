@@ -14,11 +14,11 @@ function [s, R] = coordinateDescent(I, mask)
 % Ahmad Humayun
 % July 11, 2012
 
-settings.theta_g = 0.75;        % threshold for intensity edge
+settings.theta_g = 0.075;       % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
 settings.C = 10;                % number of basis color clusters
 
-settings.w_s = 1e-3;            % the weight for spatial prior term
+settings.w_s = 5e-4;            % the weight for shading smoothness term
 settings.w_r = 1e-2;            % the weight for gradient consistency term
 settings.w_cl = 1;              % the weight for global sparse reflectance 
                                 % prior
@@ -40,6 +40,7 @@ assert(size(I,3) == 3, 'This algorithm only works on color images');
 
 % convert to input image to double and mask to binary for consistency
 data.I = im2double(I);
+% data.I = double(I) ./ (2^16-1);
 data.mask = logical(mask);
 
 %%%%%%%%%%%%%% Compute constants for the algorithm %%%%%%%%%%%%%%
@@ -53,6 +54,7 @@ data.nghb_masks = createNeighborhoodMasks(data.mask);
 
 % find the reflectance edges btw pixel i and j (4-connected neighborhood)
 data.g = computeReflectanceEdge(data, settings);
+data.g2 = computeReflectanceEdge2(data, settings);
 
 % compute log image gradient multiplied only at reflectance edges (used by
 % gradient consistency - retinex term E_{ret})

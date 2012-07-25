@@ -21,21 +21,44 @@ Eret = 0.0;
 log_r = log(r+eps);
 
 % compute the energy with the north neighboring pixel
-Eret = Eret + sum((log_r(nghb_masks(:,:,1)) - log_r(nghb_masks(:,:,2)) - ...
-                   log_gradm_g{1}(nghb_masks(:,:,1))).^2);
+% Eret = Eret + sum((log_r(nghb_masks(:,:,1)) - log_r(nghb_masks(:,:,2)) - ...
+%                    log_gradm_g{1}(nghb_masks(:,:,1))).^2);
+% 
+% % compute the energy with the east neighboring pixel
+% Eret = Eret + sum((log_r(nghb_masks(:,:,3)) - log_r(nghb_masks(:,:,4)) - ...
+%                    log_gradm_g{2}(nghb_masks(:,:,3))).^2);
+% 
+% % compute the energy with the south neighboring pixel
+% Eret = Eret + sum((log_r(nghb_masks(:,:,5)) - log_r(nghb_masks(:,:,6)) - ...
+%                    log_gradm_g{3}(nghb_masks(:,:,5))).^2);
+% 
+% % compute the energy with the west neighboring pixel
+% Eret = Eret + sum((log_r(nghb_masks(:,:,7)) - log_r(nghb_masks(:,:,8)) - ...
+%                    log_gradm_g{4}(nghb_masks(:,:,7))).^2);
 
-% compute the energy with the east neighboring pixel
-Eret = Eret + sum((log_r(nghb_masks(:,:,3)) - log_r(nghb_masks(:,:,4)) - ...
-                   log_gradm_g{2}(nghb_masks(:,:,3))).^2);
 
-% compute the energy with the south neighboring pixel
-Eret = Eret + sum((log_r(nghb_masks(:,:,5)) - log_r(nghb_masks(:,:,6)) - ...
-                   log_gradm_g{3}(nghb_masks(:,:,5))).^2);
+temp = log_r(nghb_masks(:,:,1)) - log_r(nghb_masks(:,:,2));
+filtered_nr = zeros(size(mask));
+filtered_nr(nghb_masks(:,:,1)) = temp;
+temp = log_r(nghb_masks(:,:,3)) - log_r(nghb_masks(:,:,4));
+filtered_er = zeros(size(mask));
+filtered_er(nghb_masks(:,:,3)) = temp;
+temp = log_r(nghb_masks(:,:,5)) - log_r(nghb_masks(:,:,6));
+filtered_sr = zeros(size(mask));
+filtered_sr(nghb_masks(:,:,5)) = temp;
+temp = log_r(nghb_masks(:,:,7)) - log_r(nghb_masks(:,:,8));
+filtered_wr = zeros(size(mask));
+filtered_wr(nghb_masks(:,:,7)) = temp;
 
-% compute the energy with the west neighboring pixel
-Eret = Eret + sum((log_r(nghb_masks(:,:,7)) - log_r(nghb_masks(:,:,8)) - ...
-                   log_gradm_g{4}(nghb_masks(:,:,7))).^2);
-               
+laplacian_r = filtered_nr + filtered_er + filtered_sr + filtered_wr;
+
+Eret = log_r .* laplacian_r;
+Eret = sum(Eret(mask));
+
+temp = (log_gradm_g{1} .* filtered_nr) + (log_gradm_g{4} .* filtered_wr);
+temp = sum(temp(mask));
+Eret = Eret - 2*temp;
+
 % compute the derivative
 laplacian_r = L * log_r(mask);
 dEret =  2*laplacian_r - 2*cret_deriv_term;
