@@ -1,4 +1,4 @@
-function [Eret, dEret] = computeGradientConsistency(r, log_gradm_g, cret_deriv_term, L, nghb_masks, mask)
+function [Eret, dEret] = computeGradientConsistency(r, log_gradm_g, g2, cret_deriv_term, L, nghb_masks, mask)
 % Computes an energy function where an object can't be explained either by
 % shading or reflectance change. The method is given in eq (5) in 
 % Gehler et al. NIPS 2011
@@ -55,7 +55,7 @@ laplacian_r = filtered_nr + filtered_er + filtered_sr + filtered_wr;
 Eret = log_r .* laplacian_r;
 Eret = sum(Eret(mask));
 
-temp = (log_gradm_g{1} .* filtered_nr) + (log_gradm_g{4} .* filtered_wr);
+temp = (g2(:,:,1) .* filtered_nr) + (g2(:,:,2) .* filtered_wr);
 temp = sum(temp(mask));
 Eret = Eret - 2*temp;
 

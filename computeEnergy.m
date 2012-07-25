@@ -7,7 +7,7 @@ full_r(data.mask) = r;
 [Es, dEs] = computeShadingPrior(data.Im, full_r, data.L, data.mask);
 
 % compute gradient consistency
-[Eret, dEret] = computeGradientConsistency(full_r, data.log_gradm_g, data.cret_deriv_term, data.L, data.nghb_masks, data.mask);
+[Eret, dEret] = computeGradientConsistency(full_r, data.log_gradm_g, data.g2, data.cret_deriv_term, data.L, data.nghb_masks, data.mask);
 
 % compute global sparse reflectance prior
 [Ecl, dEcl] = computeGlobalReflectancePrior(full_r, data.Rd, alpha, alpha_cntr, data.mask);
