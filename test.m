@@ -1,11 +1,13 @@
-if ispc
-    user_dir = getenv('USERPROFILE'); 
-else
-    user_dir = getenv('HOME');
+if strcmp(getenv('USERNAME'), 'Steve') % Point to Steve's data directory
+    data_dir = fullfile('..', 'data');
+else % Point to Ahmad's data directory
+    if ispc
+        user_dir = getenv('USERPROFILE');
+    else
+        user_dir = getenv('HOME');
+    end
+    data_dir = fullfile(user_dir, 'Dropbox', 'IntrinsicImageData');
 end
-
-data_dir = fullfile(user_dir, 'Dropbox', 'IntrinsicImageData');
-% data_dir = fullfile('..', 'data');
 
 image_names = {'apple';'box';'cup1';'cup2';'deer';'desktop.ini'; ...
     'dinosaur';'frog1';'frog2';'panther';'paper1';'paper2';'pear'; ...
@@ -31,9 +33,11 @@ s = mat2gray(s);
 R = mat2gray(R);
 mask = logical(mask);
 
-% Test LMSE computation
-k = 20;
-LMSE = computeScore(s, s + rand(size(s)), R, R + rand(size(R)), mask, k);
+% % Test LMSE computation
+% k = 20;
+% LMSE = computeScore(s, s + rand(size(s)), R, R + rand(size(R)), mask, k);
 
-% Test shading prior (Es) computation
-Es = computeShadingPrior(s, mask);
+% % Test shading prior (Es) computation
+% Es = computeShadingPrior(s, mask);
+
+[s, R] = coordinateDescent(I, mask);
