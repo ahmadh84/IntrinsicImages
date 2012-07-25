@@ -52,5 +52,6 @@ s = Im ./ r;
 % end
 
 % Fastest method: used in code for NIPS 2011
-Es = 2 * s(mask).' * L * s(mask);
+% Es = 2 * s(mask).' * L * s(mask);
+Es = s(mask).' * L * s(mask);
 dEs = -2 * L * s(mask) .* Im(mask) ./ r(mask).^2; % SJR Note: NIPS 2011 paper adds eps in denominator

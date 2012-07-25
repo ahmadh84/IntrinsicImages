@@ -22,7 +22,7 @@ settings.theta_g = 0.075;       % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
 settings.C = 10;                % number of basis color clusters
 
-settings.w_s = 5e-4;            % the weight for shading smoothness term
+settings.w_s = 1e-3;            % the weight for shading smoothness term
 settings.w_r = 1e-2;            % the weight for gradient consistency term
 settings.w_cl = 1;              % the weight for global sparse reflectance 
                                 % prior
