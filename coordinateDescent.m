@@ -16,10 +16,10 @@ function [s, R] = coordinateDescent(I, mask)
 
 settings.theta_g = 0.75;        % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
-settings.C = 5;                 % number of basis color clusters
+settings.C = 10;                % number of basis color clusters
 
-settings.w_s = 1e-5;            % the weight for spatial prior term
-settings.w_r = 1e-5;            % the weight for gradient consistency term
+settings.w_s = 1e-3;            % the weight for spatial prior term
+settings.w_r = 1e-2;            % the weight for gradient consistency term
 settings.w_cl = 1;              % the weight for global sparse reflectance 
                                 % prior
 
@@ -28,6 +28,7 @@ settings.diff_theta = 1e-5;     % terminate looping if the difference in
                                 % value
 
 settings.minimize_max_iter = 1e4;
+settings.max_iterations   = 250;
 
 % add libraries to the path
 curr_dir = fileparts(which(mfilename));
@@ -74,27 +75,80 @@ fprintf('Running k-means - this can take a couple of mins\n');
 [alpha, r_alpha_cntr] = kmeans(rdotRd_masked, settings.C, 'replicates',1, ...
                  'options',statset('MaxIter',1000));
 fprintf('Done k-means\n');
-alpha_clstr = zeros(size(r));
+alpha_clstr = nan(size(r));
 alpha_clstr(data.mask) = alpha;
 
 % vectorize r and only keep values inside the mask
 r = r(data.mask);
 
+Rd_vec = reshape(data.Rd, [size(data.Rd,1)*size(data.Rd,2) 3]);
+Rd_vec = Rd_vec(data.mask(:),:);
 
 last_energy = inf;
-curr_energy = -inf;
+curr_energy = 1e20;
 
+iter = 0;
+
+% main loop (loop until energy change is smaller than a threshold or the
+% number of iterations exceed some threshold)
 while last_energy - curr_energy > settings.diff_theta
     last_energy = curr_energy;
     
-    % compute the total energy given the cluster assignment and reflectance
-%     curr_energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
-    
-    % optimize r given split
-    r = minimize(r, @computeEnergy, ...
+    % optimize r using BFGS
+    [r, e] = minimize(r, @computeEnergy, ...
         struct('length', settings.minimize_max_iter, 'verbosity', 1), ...
         alpha_clstr, r_alpha_cntr, data, settings);
+    
+    curr_energy = e(end);
+    
+    % check if the energy is decreasing
+    assert(last_energy >= curr_energy, 'The energy increased in this optimization iteration');
+    
+    % find new cluster centers
+    rdotRd = bsxfun(@times, r, Rd_vec);
+    alpha_clstr_vec = alpha_clstr(data.mask);
+    for c_idx = 1:size(r_alpha_cntr,1)
+        r_alpha_cntr(c_idx,:) = mean(rdotRd(alpha_clstr_vec == c_idx, :), 1);
+    end
+    
+    % assign new cluster indices with new cluster centers
+    alpha_clstr_mskd = zeros(size(rdotRd,1),1);
+    for p_idx = 1:size(alpha_clstr_mskd,1)
+      dists = sum(bsxfun(@minus, rdotRd(p_idx,:), r_alpha_cntr).^2, 2);
+      [dist alpha_clstr_mskd(p_idx)] = min(dists);
+    end
+    alpha_clstr = nan(size(data.mask));
+    alpha_clstr(data.mask) = alpha_clstr_mskd;
+    
+    % for visualizing the reflectance and shading
+    est_reflectance = zeros([size(data.I,1)*size(data.I,2) 3]);
+    est_reflectance(data.mask(:),:) = rdotRd;
+    est_reflectance = reshape(est_reflectance, size(data.I));
+    
+    full_r = zeros(size(data.mask));
+    full_r(data.mask) = r;
+    est_shading = data.Im ./ full_r;
+    
+    % plot
+    iter = iter + 1;
+    
+    % visualize interim results
+    subplot(1, 2, 1);
+    imshow(getNormalized(est_reflectance));
+    title(sprintf('Estimated Reflectance - iteration %d', iter));
+    subplot(1, 2, 2);
+    imshow(getNormalized(est_shading));
+    title(sprintf('Estimated Shading - iteration %d', iter));
+    drawnow;
+    
+    % in case the loop has exceeded the max # of iterations
+    if iter >= settings.max_iterations
+        warning('coordinateDescent:prematureEnd', 'The maximum number of iterations for the optimization were reached');
+        break;
+    end
 end
+
+% fin
 end
 
 
@@ -130,4 +184,12 @@ west_mask_j = [west_mask_i(:,2:end) false(size(mask,1),1)];
 
 nghb_masks = cat(3, north_mask_i, north_mask_j, east_mask_i, east_mask_j, ...
                     south_mask_i, south_mask_j, west_mask_i, west_mask_j);
+end
+
+
+function i = getNormalized(i)
+mx = max(i(:));
+mn = min(i(:));
+
+i = (i - mn) ./ (mx - mn);
 end
