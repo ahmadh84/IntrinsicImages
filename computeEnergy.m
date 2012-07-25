@@ -10,7 +10,7 @@ full_r(data.mask) = r;
 [Eret, dEret] = computeGradientConsistency(full_r, data.log_gradm_g, data.g2, data.cret_deriv_term, data.L, data.nghb_masks, data.mask);
 
 % compute global sparse reflectance prior
-[Ecl, dEcl] = computeGlobalReflectancePrior(full_r, data.Rd, alpha, alpha_cntr, data.mask);
+[Ecl, dEcl] = computeGlobalReflectancePrior(full_r, data.Rd, alpha, alpha_cntr, settings.C, data.mask);
 
 % complete energy as a weighted sum
 energy = settings.w_s*Es + settings.w_r*Eret + settings.w_cl*Ecl;

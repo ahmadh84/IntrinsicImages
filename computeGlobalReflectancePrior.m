@@ -1,4 +1,4 @@
-function [Ecl, dEcl] = computeGlobalReflectancePrior(r, Rd, alpha, alpha_cntr, mask)
+function [Ecl, dEcl] = computeGlobalReflectancePrior(r, Rd, alpha, alpha_cntr, C, mask)
 % Computes an energy function where each pixel's current reflectance value
 % is compared to the cluster centers they belong to. The method is given in
 % eq (6) in Gehler et al. NIPS 2011
@@ -20,6 +20,13 @@ function [Ecl, dEcl] = computeGlobalReflectancePrior(r, Rd, alpha, alpha_cntr, m
 rdotRd = bsxfun(@times, r, Rd);
 rdotRd = reshape(rdotRd, size(r,1)*size(r,2), 3);
 rdotRd_masked = rdotRd(mask(:),:);
+
+% compute the centroids for each cluster
+alpha_mskd = alpha(mask);
+alpha_cntr = zeros(C,3);
+for c_idx = 1:size(alpha_cntr,1)
+    alpha_cntr(c_idx,:) = mean(rdotRd_masked(alpha_mskd == c_idx, :), 1);
+end
 
 % difference of reflectance with the selected basis colors
 diff = rdotRd_masked - alpha_cntr(alpha(mask),:);
