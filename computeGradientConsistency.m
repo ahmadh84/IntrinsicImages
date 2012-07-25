@@ -1,4 +1,4 @@
-function Eret = computeGradientConsistency(r, log_gradm_g, nghb_masks)
+function [Eret, dEret] = computeGradientConsistency(r, log_gradm_g, cret_deriv_term, L, nghb_masks, mask)
 % Computes an energy function where an object can't be explained either by
 % shading or reflectance change. The method is given in eq (5) in 
 % Gehler et al. NIPS 2011
@@ -17,20 +17,28 @@ function Eret = computeGradientConsistency(r, log_gradm_g, nghb_masks)
 
 Eret = 0.0;
 
+% compute the log of r to be used both in computing energy and its deriv.
+log_r = log(r+eps);
+
 % compute the energy with the north neighboring pixel
-Eret = Eret + sum((log(r(nghb_masks(:,:,1))) - log(r(nghb_masks(:,:,2))) - ...
+Eret = Eret + sum((log_r(nghb_masks(:,:,1)) - log_r(nghb_masks(:,:,2)) - ...
                    log_gradm_g{1}(nghb_masks(:,:,1))).^2);
 
 % compute the energy with the east neighboring pixel
-Eret = Eret + sum((log(r(nghb_masks(:,:,3))) - log(r(nghb_masks(:,:,4))) - ...
+Eret = Eret + sum((log_r(nghb_masks(:,:,3)) - log_r(nghb_masks(:,:,4)) - ...
                    log_gradm_g{2}(nghb_masks(:,:,3))).^2);
 
 % compute the energy with the south neighboring pixel
-Eret = Eret + sum((log(r(nghb_masks(:,:,5))) - log(r(nghb_masks(:,:,6))) - ...
+Eret = Eret + sum((log_r(nghb_masks(:,:,5)) - log_r(nghb_masks(:,:,6)) - ...
                    log_gradm_g{3}(nghb_masks(:,:,5))).^2);
 
 % compute the energy with the west neighboring pixel
-Eret = Eret + sum((log(r(nghb_masks(:,:,7))) - log(r(nghb_masks(:,:,8))) - ...
+Eret = Eret + sum((log_r(nghb_masks(:,:,7)) - log_r(nghb_masks(:,:,8)) - ...
                    log_gradm_g{4}(nghb_masks(:,:,7))).^2);
+               
+% compute the derivative
+laplacian_r = L * log_r(mask);
+dEret =  2*laplacian_r - 2*cret_deriv_term;
+dEret = dEret ./ r(mask);
 end
 

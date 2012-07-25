@@ -14,9 +14,9 @@ function [s, R] = coordinateDescent(I, mask)
 % Ahmad Humayun
 % July 11, 2012
 
-settings.theta_g = 10;          % threshold for intensity edge
-settings.theta_c = 6;           % threshold for chromaticity edge
-settings.C = 100;               % number of basis color clusters
+settings.theta_g = 0.75;        % threshold for intensity edge
+settings.theta_c = 1;           % threshold for chromaticity edge
+settings.C = 5;                 % number of basis color clusters
 
 settings.w_s = 1e-5;            % the weight for spatial prior term
 settings.w_r = 1e-5;            % the weight for gradient consistency term
@@ -26,6 +26,8 @@ settings.w_cl = 1;              % the weight for global sparse reflectance
 settings.diff_theta = 1e-5;     % terminate looping if the difference in 
                                 % energy between iteration is less than this 
                                 % value
+
+settings.minimize_max_iter = 1e4;
 
 % add libraries to the path
 curr_dir = fileparts(which(mfilename));
@@ -40,8 +42,8 @@ data.I = im2double(I);
 data.mask = logical(mask);
 
 %%%%%%%%%%%%%% Compute constants for the algorithm %%%%%%%%%%%%%%
-% compute magnitude (l2 norm) of each pixel -> ||I_i||
-data.Im = sqrt(sum(data.I.^2, 3));
+% compute magnitude (l1 norm) of each pixel -> ||I_i||_1
+data.Im = sum(data.I, 3);
 
 % compute reflectance direction -> \vec{R}_i
 data.Rd = bsxfun(@times, data.I, 1./data.Im);
@@ -58,6 +60,9 @@ data.log_gradm_g = computeLogGradMagEdge(data);
 % Create discrete Laplacian operator as a matrix
 data.L = create4connected(size(data.I,1), size(data.I,2), data.mask);
 
+% get the constant term for the retinex gradient term
+data.cret_deriv_term = computeCretDerivativeTerm(data);
+
 % get an initial value of r -> r^0
 r = rinitialize(data, 1);
 
@@ -72,6 +77,10 @@ fprintf('Done k-means\n');
 alpha_clstr = zeros(size(r));
 alpha_clstr(data.mask) = alpha;
 
+% vectorize r and only keep values inside the mask
+r = r(data.mask);
+
+
 last_energy = inf;
 curr_energy = -inf;
 
@@ -79,7 +88,12 @@ while last_energy - curr_energy > settings.diff_theta
     last_energy = curr_energy;
     
     % compute the total energy given the cluster assignment and reflectance
-    curr_energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
+%     curr_energy = computeEnergy(r, alpha_clstr, r_alpha_cntr, data, settings);
+    
+    % optimize r given split
+    r = minimize(r, @computeEnergy, ...
+        struct('length', settings.minimize_max_iter, 'verbosity', 1), ...
+        alpha_clstr, r_alpha_cntr, data, settings);
 end
 end
 

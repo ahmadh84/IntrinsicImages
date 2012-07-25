@@ -3,6 +3,9 @@ function g = computeReflectanceEdge(data, settings)
 % 4-connected pixel neighborhood (represented by j). The method is given
 % after eq (5) in Gehler et al. NIPS 2011
 %
+% Note that the answer for the north and south / west and east neighborhood
+% should be equivalent!
+%
 % Inputs:
 %   data.I - input RGB image
 %   settings.theta_g - intensity gradient threshold
@@ -73,7 +76,7 @@ g_int = abs(I1_intsty - I2_intsty) > settings.theta_g;
 %  - since it has two channels, use the L2 norm of the difference
 g_chr = sqrt(sum((I1_chroma - I2_chroma).^2, 3)) > settings.theta_c;
 
-% classify as reflectance edge only if is both by intensity and
+% classify as reflectance edge only if it is both an edge by intensity and
 % chromaticity
 g = g_int & g_chr;
 end

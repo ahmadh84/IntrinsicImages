@@ -23,26 +23,22 @@ function log_gradm_g = computeLogGradMagEdge(data)
 
 % compute the log of each pixel's magnitude (plus replicate pixels at 
 % image boundaries to deal with boundary cases later on)
-Ilm = log(data.Im);
-Ilm = [Ilm(1,:,:); Ilm; Ilm(end,:,:)];
-Ilm = [Ilm(:,1,:) Ilm Ilm(:,end,:)];
+Ilm = log(data.Im + eps);
 
-% get the center image
-center_Ilm = Ilm(2:end-1, 2:end-1, :);
-
-% get the 4 images for the 4-connected neighborhood pixels
-north_Ilm = Ilm(1:end-2, 2:end-1, :);
-east_Ilm  = Ilm(2:end-1, 3:end,   :);
-south_Ilm = Ilm(3:end,   2:end-1, :);
-west_Ilm  = Ilm(2:end-1, 1:end-2, :);
-
-log_grad_mag = zeros(size(data.Im,1), size(data.Im,2), 4);
+log_grad_mag = zeros(size(data.Im,1)*size(data.Im,2), 4);
 
 % log gradient in each of the 4 directions
-log_grad_mag(:,:,1) = (center_Ilm - north_Ilm).^2;
-log_grad_mag(:,:,2) = (center_Ilm - east_Ilm).^2;
-log_grad_mag(:,:,3) = (center_Ilm - south_Ilm).^2;
-log_grad_mag(:,:,4) = (center_Ilm - west_Ilm).^2;
+temp = Ilm(data.nghb_masks(:,:,1)) - Ilm(data.nghb_masks(:,:,2));
+log_grad_mag(data.nghb_masks(:,:,1),1) = temp.^2;
+temp = Ilm(data.nghb_masks(:,:,3)) - Ilm(data.nghb_masks(:,:,4));
+log_grad_mag(data.nghb_masks(:,:,3),2) = temp.^2;
+temp = Ilm(data.nghb_masks(:,:,5)) - Ilm(data.nghb_masks(:,:,6));
+log_grad_mag(data.nghb_masks(:,:,5),3) = temp.^2;
+temp = Ilm(data.nghb_masks(:,:,7)) - Ilm(data.nghb_masks(:,:,8));
+log_grad_mag(data.nghb_masks(:,:,7),4) = temp.^2;
+
+% reshape to image size
+log_grad_mag = reshape(log_grad_mag, [size(data.Im,1), size(data.Im,2), 4]);
 
 % discard all log gradient values where there is not a reflectance edge
 log_gradm_g = data.g .* log_grad_mag;
