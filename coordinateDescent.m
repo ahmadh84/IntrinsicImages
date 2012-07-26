@@ -122,26 +122,10 @@ while last_energy - curr_energy > settings.diff_theta
     alpha_clstr = nan(size(data.mask));
     alpha_clstr(data.mask) = alpha_clstr_mskd;
     
-    % for visualizing the reflectance and shading
-    est_reflectance = zeros([size(data.I,1)*size(data.I,2) 3]);
-    est_reflectance(data.mask(:),:) = rdotRd;
-    est_reflectance = reshape(est_reflectance, size(data.I));
-    
-    full_r = zeros(size(data.mask));
-    full_r(data.mask) = r;
-    est_shading = data.Im ./ full_r;
-    
     % plot
     iter = iter + 1;
     
-    % visualize interim results
-    subplot(1, 2, 1);
-    imshow(getNormalized(est_reflectance));
-    title(sprintf('Estimated Reflectance - iteration %d', iter));
-    subplot(1, 2, 2);
-    imshow(getNormalized(est_shading));
-    title(sprintf('Estimated Shading - iteration %d', iter));
-    drawnow;
+    [ est_reflectance est_shading ] = displayOutput(r, data.Rd, data.I, data.Im, data.mask, iter);
     
     % in case the loop has exceeded the max # of iterations
     if iter >= settings.max_iterations
@@ -186,12 +170,4 @@ west_mask_j = [west_mask_i(:,2:end) false(size(mask,1),1)];
 
 nghb_masks = cat(3, north_mask_i, north_mask_j, east_mask_i, east_mask_j, ...
                     south_mask_i, south_mask_j, west_mask_i, west_mask_j);
-end
-
-
-function i = getNormalized(i)
-mx = max(i(:));
-mn = min(i(:));
-
-i = (i - mn) ./ (mx - mn);
 end

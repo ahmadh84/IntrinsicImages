@@ -20,13 +20,13 @@ function [ cretDerivativeTerm ] = computeCretDerivativeTerm(data)
 % 
 % self.cretDerivativeTerm = filterH'*self.estH + filterV'*self.estV;
 
-vert_derivative = zeros(size(data.mask));
+vert_derivative = -data.g2(:,:,1);
 v_g2 = data.g2(:,:,1);
 vert_derivative(data.nghb_masks(:,:,2)) = ...
                 v_g2(data.nghb_masks(:,:,1)) - ...
                 v_g2(data.nghb_masks(:,:,2));
 
-horz_derivative = zeros(size(data.mask));
+horz_derivative = -data.g2(:,:,2);
 h_g2 = data.g2(:,:,2);
 horz_derivative(data.nghb_masks(:,:,8)) = ...
                 h_g2(data.nghb_masks(:,:,7)) - ...
