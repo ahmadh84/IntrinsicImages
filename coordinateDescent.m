@@ -21,6 +21,7 @@ function [est_shading, est_reflectance, score] = coordinateDescent(I, mask, true
 settings.theta_g = 0.075;       % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
 settings.C = 10;                % number of basis color clusters
+settings.kmeans_repl = 1;       % number kmeans replicates
 
 settings.w_s = 1e-3;            % the weight for shading smoothness term
 settings.w_r = 1e-2;            % the weight for gradient consistency term
@@ -78,8 +79,9 @@ rdotRd = bsxfun(@times, r, data.Rd);
 rdotRd = reshape(rdotRd, size(r,1)*size(r,2), 3);
 rdotRd_masked = rdotRd(data.mask(:),:);
 fprintf('Running k-means - this can take a couple of mins\n');
-[alpha, r_alpha_cntr] = kmeans(rdotRd_masked, settings.C, 'replicates',1, ...
-                 'options',statset('MaxIter',1000));
+[alpha, r_alpha_cntr] = kmeans(rdotRd_masked, settings.C, ...
+                               'replicates',settings.kmeans_repl, ...
+                               'options',statset('MaxIter',1000));
 fprintf('Done k-means\n');
 alpha_clstr = nan(size(r));
 alpha_clstr(data.mask) = alpha;
