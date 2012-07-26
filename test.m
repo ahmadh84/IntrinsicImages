@@ -12,13 +12,16 @@ end
 image_names = {'apple';'box';'cup1';'cup2';'deer';'desktop.ini'; ...
     'dinosaur';'frog1';'frog2';'panther';'paper1';'paper2';'pear'; ...
     'phone';'potato';'raccoon';'squirrel';'sun';'teabag1';'teabag2'; ...
-    'turtle'};
-idx = 18;    % Select a particular image
+    'turtle';'acorns'};
 
-I = imread(fullfile(data_dir, image_names{idx}, 'diffuse.png'));
-s = imread(fullfile(data_dir, image_names{idx}, 'shading.png'));
-R = imread(fullfile(data_dir, image_names{idx}, 'reflectance.png'));
-mask = imread(fullfile(data_dir, image_names{idx}, 'mask.png'));
+% Select a particular image
+idx = 21; image_name = image_names{idx};
+% image_name = 'acorns';
+
+I = imread(fullfile(data_dir, image_name, 'diffuse.png'));
+s = imread(fullfile(data_dir, image_name, 'shading.png'));
+R = imread(fullfile(data_dir, image_name, 'reflectance.png'));
+mask = imread(fullfile(data_dir, image_name, 'mask.png'));
 
 % Plot the image components
 % figure(1); imshow(I); title('Original');
@@ -28,13 +31,17 @@ mask = imread(fullfile(data_dir, image_names{idx}, 'mask.png'));
 
 % Convert all image components to double for computation
 % Since only relative scaling matters, convert to interval [0, 1]
-I = mat2gray(I);
-s = mat2gray(s);
-R = mat2gray(R);
+% I = mat2gray(I);
+% s = mat2gray(s);
+% R = mat2gray(R);
 mask = logical(mask);
 
 % Test LMSE computation
 % LMSE = computeScore(s, s + 30*rand(size(s)), R, R + 30*rand(size(R)), mask);
 
 % [s, R] = coordinateDescent(I, mask);
+tic;
 [est_shading, est_reflectance, score] = coordinateDescent(I, mask, s, R);
+toc;
+
+save(fullfile(data_dir, [image_name '_results.mat']));
