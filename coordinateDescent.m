@@ -20,7 +20,7 @@ function [est_shading, est_reflectance, score] = coordinateDescent(I, mask, true
 
 settings.theta_g = 0.075;       % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
-settings.C = 10;                % number of basis color clusters
+settings.C = 25;                % number of basis color clusters
 settings.kmeans_repl = 1;       % number kmeans replicates
 
 settings.w_s = 1e-3;            % the weight for shading smoothness term
@@ -148,7 +148,7 @@ while last_energy - curr_energy > settings.diff_theta
     end
 end
 
-score = computeScore(true_shading, est_shading, true_reflectance, est_reflectance, mask);
+score = computeScore(true_shading, est_shading, true_reflectance, est_reflectance, data.mask);
 
 % fin
 end
