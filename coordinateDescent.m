@@ -39,6 +39,11 @@ settings.max_iterations   = 250;
 curr_dir = fileparts(which(mfilename));
 addpath(genpath(fullfile(curr_dir, 'libs')));
 
+% check for all variables
+if exist('I','var')~=1 || exist('mask','var')~=1 || ...
+   exist('true_shading','var')~=1 || exist('true_reflectance','var')~=1
+    error('coordinateDescent:Arguments', 'missing arguments');
+end
 
 % check if its a color image
 assert(size(I,3) == 3, 'This algorithm only works on color images');
@@ -130,6 +135,9 @@ while last_energy - curr_energy > settings.diff_theta
     
     % plot
     iter = iter + 1;
+    
+    % throw away the imaginary part
+    r = real(r);
     
     [ est_reflectance est_shading ] = displayOutput(r, data.Rd, data.I, data.Im, data.mask, iter);
     
