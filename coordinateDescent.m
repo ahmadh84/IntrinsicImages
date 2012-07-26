@@ -131,6 +131,9 @@ while last_energy - curr_energy > settings.diff_theta
     % plot
     iter = iter + 1;
     
+    % throw away the imaginary part
+    r = real(r);
+    
     [ est_reflectance est_shading ] = displayOutput(r, data.Rd, data.I, data.Im, data.mask, iter);
     
     % in case the loop has exceeded the max # of iterations
