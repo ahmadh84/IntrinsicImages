@@ -42,6 +42,4 @@ for left = 1:k/2:M-k
     end
 end
 
-LMSE = 1000 * LMSE;
-
 end

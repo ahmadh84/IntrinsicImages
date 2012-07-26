@@ -1,4 +1,4 @@
-function [s, R] = coordinateDescent(I, mask)
+function [est_shading, est_reflectance, score] = coordinateDescent(I, mask, true_shading, true_reflectance)
 % Computes the intrinsic image separation of the reflectance and shading
 % using algorithm 1 in Gehler et al. NIPS 2011. This is a coordinate 
 % descent solution to eq (3) in the paper.
@@ -6,10 +6,14 @@ function [s, R] = coordinateDescent(I, mask)
 % Inputs:
 %   I - input RGB image
 %   mask - binary mask giving the location of the object
+%   true_shading - true shading, same width and height as I
+%   true_reflectance - true reflectance, 3 channels, same size as I
 % 
 % Outputs:
-%   s - a shading matrix of the same width and height as I
-%   R - the reflectance matrix with 3 channels, same size as I
+%   est_shading - estimated shading, same width and height as I
+%   est_reflectance - estimated reflectance, 3 channels, same size as I
+%   score - LMSE-based score comparing estimated shading and reflectance to
+%       true values
 % 
 % Ahmad Humayun
 % July 11, 2012
@@ -133,6 +137,8 @@ while last_energy - curr_energy > settings.diff_theta
         break;
     end
 end
+
+score = computeScore(true_shading, est_shading, true_reflectance, est_reflectance, mask);
 
 % fin
 end

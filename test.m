@@ -13,9 +13,9 @@ image_names = {'apple';'box';'cup1';'cup2';'deer';'desktop.ini'; ...
     'dinosaur';'frog1';'frog2';'panther';'paper1';'paper2';'pear'; ...
     'phone';'potato';'raccoon';'squirrel';'sun';'teabag1';'teabag2'; ...
     'turtle'};
-idx = 1;    % Select a particular image
+idx = 18;    % Select a particular image
 
-I = imread(fullfile(data_dir, image_names{idx}, 'original.png'));
+I = imread(fullfile(data_dir, image_names{idx}, 'diffuse.png'));
 s = imread(fullfile(data_dir, image_names{idx}, 'shading.png'));
 R = imread(fullfile(data_dir, image_names{idx}, 'reflectance.png'));
 mask = imread(fullfile(data_dir, image_names{idx}, 'mask.png'));
@@ -33,11 +33,8 @@ s = mat2gray(s);
 R = mat2gray(R);
 mask = logical(mask);
 
-% % Test LMSE computation
-% k = 20;
-% LMSE = computeScore(s, s + rand(size(s)), R, R + rand(size(R)), mask, k);
+% Test LMSE computation
+% LMSE = computeScore(s, s + 30*rand(size(s)), R, R + 30*rand(size(R)), mask);
 
-% % Test shading prior (Es) computation
-% Es = computeShadingPrior(s, mask);
-
-[s, R] = coordinateDescent(I, mask);
+% [s, R] = coordinateDescent(I, mask);
+[est_shading, est_reflectance, score] = coordinateDescent(I, mask, s, R);

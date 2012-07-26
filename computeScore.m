@@ -32,3 +32,5 @@ num2 = computeLMSE(R, R_hat, mask, k);
 den2 = computeLMSE(R, zeros(size(R)), mask, k);
 
 score = (1/2) * num1 / den1 + (1/2) * num2 / den2;
+
+score = score * 1000; % Multiply by 1000 as in NIPS 2011
