@@ -26,10 +26,10 @@ if ~exist('k', 'var')
     k = 20;
 end
 
-num1 = computeLMSE(S, S_hat, mask, k);
-den1 = computeLMSE(S, zeros(size(S)), mask, k);
-num2 = computeLMSE(R, R_hat, mask, k);
-den2 = computeLMSE(R, zeros(size(R)), mask, k);
+num1 = computeLMSE(double(S), S_hat, mask, k);
+den1 = computeLMSE(double(S), zeros(size(S)), mask, k);
+num2 = computeLMSE(double(R), R_hat, mask, k);
+den2 = computeLMSE(double(R), zeros(size(R)), mask, k);
 
 score = (1/2) * num1 / den1 + (1/2) * num2 / den2;
 

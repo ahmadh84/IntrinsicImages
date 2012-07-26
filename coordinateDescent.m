@@ -20,7 +20,7 @@ function [best_est_shading, best_est_reflectance, best_score, best_r_init] = coo
 
 settings.theta_g = 0.075;       % threshold for intensity edge
 settings.theta_c = 1;           % threshold for chromaticity edge
-settings.C = 10;                % number of basis color clusters
+settings.C = 25;                % number of basis color clusters
 settings.kmeans_repl = 1;       % number kmeans replicates
 
 settings.w_s = 1e-3;            % the weight for shading smoothness term
