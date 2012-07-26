@@ -42,8 +42,8 @@ for idx = 1:length(image_names)
 
     % [s, R] = coordinateDescent(I, mask);
     tic;
-    [est_shading, est_reflectance, score] = coordinateDescent(I, mask, s, R);
+    [est_shading, est_reflectance, score, best_r_init] = coordinateDescent(I, mask, s, R);
     time_elapsed = toc;
 
-    save(fullfile(data_dir, [image_name '_results.mat']), 'est_shading', 'est_reflectance', 'score', 'time_elapsed');
+    save(fullfile(data_dir, [image_name '_results.mat']), 'est_shading', 'est_reflectance', 'score', 'best_r_init', 'time_elapsed');
 end

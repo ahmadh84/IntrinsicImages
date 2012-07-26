@@ -84,8 +84,7 @@ best_r_init = [];
 % loop over different r initial values
 for r_idx = 1:4
     % get an initial value of r -> r^0
-    r_init = rinitialize(data, r_idx);
-    r = r_init;
+    r = rinitialize(data, r_idx);
 
     % run k-means to find the initial alpha of all the points
     rdotRd = bsxfun(@times, r, data.Rd);
@@ -107,7 +106,7 @@ for r_idx = 1:4
 
     last_energy = inf;
     curr_energy = 1e20;
-
+    
     iter = 0;
 
     % main loop (loop until energy change is smaller than a threshold or the
@@ -122,8 +121,12 @@ for r_idx = 1:4
 
         curr_energy = e(end);
 
-        % check if the energy is decreasing
-        assert(last_energy >= curr_energy, 'The energy increased in this optimization iteration');
+        % check if the energy is decreasing (will then automagically will
+        % use the last estimated reflectance and shading)
+        if last_energy < curr_energy
+            warning('coordinateDescent:energyIncrease', 'The energy increased in this optimization iteration');
+            break;
+        end
 
         % find new cluster centers
         rdotRd = bsxfun(@times, r, Rd_vec);
