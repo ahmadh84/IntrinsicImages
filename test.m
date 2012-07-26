@@ -28,10 +28,10 @@ mask = imread(fullfile(data_dir, image_names{idx}, 'mask.png'));
 
 % Convert all image components to double for computation
 % Since only relative scaling matters, convert to interval [0, 1]
-I = mat2gray(I);
+% I = mat2gray(I);
 s = mat2gray(s);
 R = mat2gray(R);
-mask = logical(mask);
+% mask = logical(mask);
 
 % Test LMSE computation
 % LMSE = computeScore(s, s + 30*rand(size(s)), R, R + 30*rand(size(R)), mask);
