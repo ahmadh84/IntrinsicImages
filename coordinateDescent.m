@@ -1,4 +1,4 @@
-function [est_shading, est_reflectance, score] = coordinateDescent(I, mask, true_shading, true_reflectance)
+function [best_est_shading, best_est_reflectance, best_score, best_r_init] = coordinateDescent(I, mask, true_shading, true_reflectance)
 % Computes the intrinsic image separation of the reflectance and shading
 % using algorithm 1 in Gehler et al. NIPS 2011. This is a coordinate 
 % descent solution to eq (3) in the paper.
@@ -76,79 +76,96 @@ data.L = create4connected(size(data.I,1), size(data.I,2), data.mask);
 % get the constant term for the retinex gradient term
 data.cret_deriv_term = computeCretDerivativeTerm(data);
 
-% get an initial value of r -> r^0
-r = rinitialize(data, 1);
+best_est_shading = [];
+best_est_reflectance = [];
+best_score = inf;
+best_r_init = [];
 
-% run k-means to find the initial alpha of all the points
-rdotRd = bsxfun(@times, r, data.Rd);
-rdotRd = reshape(rdotRd, size(r,1)*size(r,2), 3);
-rdotRd_masked = rdotRd(data.mask(:),:);
-fprintf('Running k-means - this can take a couple of mins\n');
-[alpha, r_alpha_cntr] = kmeans(rdotRd_masked, settings.C, ...
-                               'replicates',settings.kmeans_repl, ...
-                               'options',statset('MaxIter',1000));
-fprintf('Done k-means\n');
-alpha_clstr = nan(size(r));
-alpha_clstr(data.mask) = alpha;
+% loop over different r initial values
+for r_idx = 1:4
+    % get an initial value of r -> r^0
+    r_init = rinitialize(data, r_idx);
+    r = r_init;
 
-% vectorize r and only keep values inside the mask
-r = r(data.mask);
+    % run k-means to find the initial alpha of all the points
+    rdotRd = bsxfun(@times, r, data.Rd);
+    rdotRd = reshape(rdotRd, size(r,1)*size(r,2), 3);
+    rdotRd_masked = rdotRd(data.mask(:),:);
+    fprintf('Running k-means - this can take a couple of mins\n');
+    [alpha, r_alpha_cntr] = kmeans(rdotRd_masked, settings.C, ...
+                                   'replicates',settings.kmeans_repl, ...
+                                   'options',statset('MaxIter',1000));
+    fprintf('Done k-means\n');
+    alpha_clstr = nan(size(r));
+    alpha_clstr(data.mask) = alpha;
 
-Rd_vec = reshape(data.Rd, [size(data.Rd,1)*size(data.Rd,2) 3]);
-Rd_vec = Rd_vec(data.mask(:),:);
+    % vectorize r and only keep values inside the mask
+    r = r(data.mask);
 
-last_energy = inf;
-curr_energy = 1e20;
+    Rd_vec = reshape(data.Rd, [size(data.Rd,1)*size(data.Rd,2) 3]);
+    Rd_vec = Rd_vec(data.mask(:),:);
 
-iter = 0;
+    last_energy = inf;
+    curr_energy = 1e20;
 
-% main loop (loop until energy change is smaller than a threshold or the
-% number of iterations exceed some threshold)
-while last_energy - curr_energy > settings.diff_theta
-    last_energy = curr_energy;
-    
-    % optimize r using BFGS
-    [r, e] = minimize(r, @computeEnergy, ...
-        struct('length', settings.minimize_max_iter, 'verbosity', 1), ...
-        alpha_clstr, r_alpha_cntr, data, settings);
-    
-    curr_energy = e(end);
-    
-    % check if the energy is decreasing
-    assert(last_energy >= curr_energy, 'The energy increased in this optimization iteration');
-    
-    % find new cluster centers
-    rdotRd = bsxfun(@times, r, Rd_vec);
-    alpha_clstr_vec = alpha_clstr(data.mask);
-    for c_idx = 1:size(r_alpha_cntr,1)
-        r_alpha_cntr(c_idx,:) = mean(rdotRd(alpha_clstr_vec == c_idx, :), 1);
+    iter = 0;
+
+    % main loop (loop until energy change is smaller than a threshold or the
+    % number of iterations exceed some threshold)
+    while last_energy - curr_energy > settings.diff_theta
+        last_energy = curr_energy;
+
+        % optimize r using BFGS
+        [r, e] = minimize(r, @computeEnergy, ...
+            struct('length', settings.minimize_max_iter, 'verbosity', 1), ...
+            alpha_clstr, r_alpha_cntr, data, settings);
+
+        curr_energy = e(end);
+
+        % check if the energy is decreasing
+        assert(last_energy >= curr_energy, 'The energy increased in this optimization iteration');
+
+        % find new cluster centers
+        rdotRd = bsxfun(@times, r, Rd_vec);
+        alpha_clstr_vec = alpha_clstr(data.mask);
+        for c_idx = 1:size(r_alpha_cntr,1)
+            r_alpha_cntr(c_idx,:) = mean(rdotRd(alpha_clstr_vec == c_idx, :), 1);
+        end
+
+        % assign new cluster indices with new cluster centers
+        alpha_clstr_mskd = zeros(size(rdotRd,1),1);
+        for p_idx = 1:size(alpha_clstr_mskd,1)
+          dists = sum(bsxfun(@minus, rdotRd(p_idx,:), r_alpha_cntr).^2, 2);
+          [dist alpha_clstr_mskd(p_idx)] = min(dists);
+        end
+        alpha_clstr = nan(size(data.mask));
+        alpha_clstr(data.mask) = alpha_clstr_mskd;
+
+        % plot
+        iter = iter + 1;
+
+        % throw away the imaginary part
+        r = real(r);
+
+        [ est_reflectance est_shading ] = displayOutput(r, data.Rd, data.I, data.Im, data.mask, iter);
+
+        % in case the loop has exceeded the max # of iterations
+        if iter >= settings.max_iterations
+            warning('coordinateDescent:prematureEnd', 'The maximum number of iterations for the optimization were reached');
+            break;
+        end
     end
+
+    score = computeScore(true_shading, est_shading, true_reflectance, est_reflectance, mask);
     
-    % assign new cluster indices with new cluster centers
-    alpha_clstr_mskd = zeros(size(rdotRd,1),1);
-    for p_idx = 1:size(alpha_clstr_mskd,1)
-      dists = sum(bsxfun(@minus, rdotRd(p_idx,:), r_alpha_cntr).^2, 2);
-      [dist alpha_clstr_mskd(p_idx)] = min(dists);
-    end
-    alpha_clstr = nan(size(data.mask));
-    alpha_clstr(data.mask) = alpha_clstr_mskd;
-    
-    % plot
-    iter = iter + 1;
-    
-    % throw away the imaginary part
-    r = real(r);
-    
-    [ est_reflectance est_shading ] = displayOutput(r, data.Rd, data.I, data.Im, data.mask, iter);
-    
-    % in case the loop has exceeded the max # of iterations
-    if iter >= settings.max_iterations
-        warning('coordinateDescent:prematureEnd', 'The maximum number of iterations for the optimization were reached');
-        break;
+    % if better than other r initializations
+    if score < best_score
+        best_est_shading = est_shading;
+        best_est_reflectance = est_reflectance;
+        best_score = score;
+        best_r_init = r_idx;
     end
 end
-
-score = computeScore(true_shading, est_shading, true_reflectance, est_reflectance, mask);
 
 % fin
 end
