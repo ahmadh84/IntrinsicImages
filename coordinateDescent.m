@@ -81,8 +81,14 @@ best_est_reflectance = [];
 best_score = inf;
 best_r_init = [];
 
+posssible_rs = 1:4;
+% if no GT available compute only one r initialization
+if ~any(any(true_shading ~= 0))
+    posssible_rs = 1;
+end
+
 % loop over different r initial values
-for r_idx = 1:4
+for r_idx = posssible_rs
     % get an initial value of r -> r^0
     r = rinitialize(data, r_idx);
 
